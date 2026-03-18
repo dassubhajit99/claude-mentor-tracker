@@ -1,6 +1,6 @@
 import axios from "axios";
 
-const BASE = "/api/sessions";
+const BASE = `${import.meta.env.VITE_API_URL || ""}/api/sessions`;
 
 export const fetchSessions = (level) => {
   const params = level && level !== "all" ? { level } : {};
