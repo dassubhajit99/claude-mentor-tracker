@@ -1,0 +1,142 @@
+.container {
+  max-width: 680px;
+}
+
+.header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 0.5rem;
+}
+
+.title {
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: #1a1a2e;
+  flex: 1;
+}
+
+.actions {
+  display: flex;
+  gap: 0.5rem;
+  flex-shrink: 0;
+}
+
+.editBtn,
+.deleteBtn {
+  padding: 0.35rem 0.9rem;
+  border-radius: 5px;
+  border: none;
+  cursor: pointer;
+  font-size: 0.85rem;
+  font-weight: 600;
+  transition: background 0.15s;
+}
+
+.editBtn {
+  background: #1a1a2e;
+  color: #fff;
+}
+
+.editBtn:hover {
+  background: #2d2d5e;
+}
+
+.deleteBtn {
+  background: #fde8e8;
+  color: #c62828;
+}
+
+.deleteBtn:hover {
+  background: #f8c0c0;
+}
+
+.meta {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.phase {
+  font-size: 0.8rem;
+  background: #e8eaf6;
+  color: #3949ab;
+  padding: 0.2rem 0.6rem;
+  border-radius: 999px;
+  font-weight: 600;
+}
+
+.subPhase {
+  font-size: 0.75rem;
+  background: #e8f5e9;
+  color: #2e7d32;
+  padding: 0.2rem 0.6rem;
+  border-radius: 999px;
+  font-weight: 600;
+}
+
+.date {
+  font-size: 0.8rem;
+  color: #888;
+}
+
+.projectBanner {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  background: #1a1a2e;
+  color: #fff;
+  padding: 0.55rem 0.9rem;
+  border-radius: 6px;
+  margin-bottom: 1.5rem;
+  font-size: 0.85rem;
+}
+
+.projectLabel {
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  opacity: 0.6;
+  flex-shrink: 0;
+}
+
+.projectName {
+  font-weight: 600;
+}
+
+.section {
+  margin-bottom: 1.25rem;
+}
+
+.section h3 {
+  font-size: 0.85rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #888;
+  margin-bottom: 0.4rem;
+}
+
+.section p {
+  font-size: 0.95rem;
+  color: #333;
+  line-height: 1.5;
+}
+
+.decisions {
+  padding-left: 1.2rem;
+}
+
+.decisions li {
+  font-size: 0.95rem;
+  color: #333;
+  margin-bottom: 0.3rem;
+  line-height: 1.4;
+}
+
+.notes {
+  white-space: pre-wrap;
+}
