@@ -10,6 +10,7 @@ const LEVEL_COLORS = {
 
 export default function SessionCard({ session, isSelected, onClick }) {
   const color = LEVEL_COLORS[session.roadmapLevel] || "gray";
+  const levelClass = `level${session.roadmapLevel}`;
   const dateStr = new Date(session.date).toLocaleDateString("en-US", {
     month: "short",
     day: "numeric",
@@ -18,7 +19,7 @@ export default function SessionCard({ session, isSelected, onClick }) {
 
   return (
     <div
-      className={`${styles.card} ${isSelected ? styles.selected : ""}`}
+      className={`${styles.card} ${isSelected ? `${styles.selected} ${styles[levelClass]}` : ""}`}
       onClick={onClick}
     >
       <div className={styles.top}>

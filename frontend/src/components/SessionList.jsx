@@ -22,10 +22,11 @@ export default function SessionList({
         {FILTERS.map((f) => (
           <button
             key={f}
+            data-level={f === "all" ? undefined : f}
             className={`${styles.filterBtn} ${activeFilter === f ? styles.active : ""}`}
             onClick={() => onFilterChange(f)}
           >
-            {f === "all" ? "All" : `L${f}`}
+            {f === "all" ? "ALL" : `L${f}`}
           </button>
         ))}
       </div>
@@ -45,7 +46,7 @@ export default function SessionList({
       </div>
 
       <button className={styles.newBtn} onClick={onNewSession}>
-        + New Session
+        + new_session
       </button>
     </div>
   );

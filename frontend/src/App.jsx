@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import SessionList from "./components/SessionList";
 import SessionDetail from "./components/SessionDetail";
 import SessionForm from "./components/SessionForm";
+import ConfirmModal from "./components/ConfirmModal";
 import { fetchSessions, createSession, updateSession, deleteSession } from "./api";
 import styles from "./styles/App.module.css";
 
@@ -12,6 +13,7 @@ export default function App() {
   const [activeFilter, setActiveFilter] = useState("all");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
 
   useEffect(() => {
     loadSessions();
@@ -48,9 +50,13 @@ export default function App() {
     setError(null);
   }
 
-  async function handleDelete() {
+  function handleDelete() {
     if (!selectedSession) return;
-    if (!window.confirm("Delete this session?")) return;
+    setShowDeleteModal(true);
+  }
+
+  async function confirmDelete() {
+    setShowDeleteModal(false);
     try {
       setLoading(true);
       await deleteSession(selectedSession._id);
@@ -137,6 +143,15 @@ export default function App() {
           </p>
         )}
       </main>
+
+      {showDeleteModal && (
+        <ConfirmModal
+          title="Delete session"
+          message={`"${selectedSession?.title}" will be permanently removed. This cannot be undone.`}
+          onConfirm={confirmDelete}
+          onCancel={() => setShowDeleteModal(false)}
+        />
+      )}
     </div>
   );
 }
