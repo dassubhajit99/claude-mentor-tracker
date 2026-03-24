@@ -18,6 +18,12 @@ export const fetchDirectives = (params = {}) =>
 export const getDirective = (id) =>
   axios.get(apiUrl(`/directives/${id}`)).then((r) => r.data);
 
+export const updateDirective = (id, data) =>
+  axios.put(apiUrl(`/directives/${id}`), data).then((r) => r.data);
+
+export const deleteDirective = (id) =>
+  axios.delete(apiUrl(`/directives/${id}`)).then((r) => r.data);
+
 export const patchDirectiveStatus = (id, status) =>
   axios.patch(apiUrl(`/directives/${id}/status`), { status }).then((r) => r.data);
 

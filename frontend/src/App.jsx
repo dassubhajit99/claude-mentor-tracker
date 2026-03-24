@@ -1,12 +1,15 @@
 import { useState, useEffect, useCallback } from "react";
 import DirectiveList from "./components/DirectiveList";
 import DirectiveDetail from "./components/DirectiveDetail";
+import DirectiveForm from "./components/DirectiveForm";
 import EntryList from "./components/EntryList";
 import EntryDetail from "./components/EntryDetail";
 import EntryForm from "./components/EntryForm";
 import ConfirmModal from "./components/ConfirmModal";
 import {
   fetchDirectives,
+  updateDirective,
+  deleteDirective,
   patchDirectiveStatus,
   fetchEntries,
   createEntry,
@@ -30,6 +33,7 @@ export default function App() {
   // ── Directives state ──
   const [directives, setDirectives] = useState([]);
   const [selectedDirective, setSelectedDirective] = useState(null);
+  const [directiveFormMode, setDirectiveFormMode] = useState(null); // "edit" | null
   const [directiveFilters, setDirectiveFilters] = useState({});
 
   // ── Entries state ──
@@ -42,7 +46,7 @@ export default function App() {
   // ── Shared state ──
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  const [showDeleteModal, setShowDeleteModal] = useState(null); // { id, title }
+  const [showDeleteModal, setShowDeleteModal] = useState(null); // { type, id, title }
 
   // ── Load data ──
   const loadDirectives = useCallback(async () => {
@@ -89,12 +93,14 @@ export default function App() {
   // ── Directive handlers ──
   function handleSelectDirective(d) {
     setSelectedDirective(d);
+    setDirectiveFormMode(null);
     setError(null);
   }
 
   function handleDirectiveFilterChange(key, value) {
     setDirectiveFilters((prev) => ({ ...prev, [key]: value }));
     setSelectedDirective(null);
+    setDirectiveFormMode(null);
   }
 
   async function handleDirectiveStatusChange(id, status) {
@@ -108,11 +114,38 @@ export default function App() {
   }
 
   function handleEditDirective() {
-    setError("Directive editing is restricted to the protected backend API flow.");
+    setDirectiveFormMode("edit");
+    setError(null);
   }
 
   function handleDeleteDirective() {
-    setError("Directive deletion is restricted to the protected backend API flow.");
+    if (!selectedDirective) return;
+    setShowDeleteModal({
+      type: "directive",
+      id: selectedDirective._id,
+      title: selectedDirective.content.slice(0, 60),
+    });
+  }
+
+  async function handleSaveDirective(payload) {
+    if (!selectedDirective) return;
+    try {
+      setLoading(true);
+      setError(null);
+      const updated = await updateDirective(selectedDirective._id, payload);
+      setDirectives((prev) => prev.map((d) => (d._id === updated._id ? updated : d)));
+      setSelectedDirective(updated);
+      setDirectiveFormMode(null);
+    } catch (e) {
+      setError(getErrorMessage(e, "Failed to save directive."));
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  function handleCancelDirectiveForm() {
+    setDirectiveFormMode(null);
+    setError(null);
   }
 
   // ── Entry handlers ──
@@ -136,6 +169,7 @@ export default function App() {
   function handleDeleteEntry() {
     if (!selectedEntry) return;
     setShowDeleteModal({
+      type: "entry",
       id: selectedEntry._id,
       title: selectedEntry.title,
     });
@@ -178,18 +212,27 @@ export default function App() {
   // ── Delete confirm ──
   async function confirmDelete() {
     if (!showDeleteModal) return;
-    const { id } = showDeleteModal;
+    const { type, id } = showDeleteModal;
     setShowDeleteModal(null);
     try {
       setLoading(true);
-      await deleteEntry(id);
-      setEntries((prev) => prev.filter((e) => e._id !== id));
-      if (selectedEntry?._id === id) {
-        setSelectedEntry(null);
-        setEntryFormMode(null);
+      if (type === "directive") {
+        await deleteDirective(id);
+        setDirectives((prev) => prev.filter((d) => d._id !== id));
+        if (selectedDirective?._id === id) {
+          setSelectedDirective(null);
+          setDirectiveFormMode(null);
+        }
+      } else {
+        await deleteEntry(id);
+        setEntries((prev) => prev.filter((e) => e._id !== id));
+        if (selectedEntry?._id === id) {
+          setSelectedEntry(null);
+          setEntryFormMode(null);
+        }
       }
     } catch (e) {
-      setError(getErrorMessage(e, "Failed to delete entry."));
+      setError(getErrorMessage(e, `Failed to delete ${type}.`));
     } finally {
       setLoading(false);
     }
@@ -198,6 +241,7 @@ export default function App() {
   // ── Close detail panel ──
   function handleCloseDetail() {
     setSelectedDirective(null);
+    setDirectiveFormMode(null);
     setSelectedEntry(null);
     setEntryFormMode(null);
   }
@@ -205,7 +249,7 @@ export default function App() {
   // Determine if detail panel is open
   const hasDetailOpen =
     activeTab === "directives"
-      ? !!selectedDirective
+      ? !!(selectedDirective || directiveFormMode)
       : !!(selectedEntry || entryFormMode);
 
   return (
@@ -224,6 +268,7 @@ export default function App() {
             onClick={() => {
               setActiveTab(tab.key);
               setSelectedDirective(null);
+              setDirectiveFormMode(null);
               setSelectedEntry(null);
               setEntryFormMode(null);
               setError(null);
@@ -266,14 +311,22 @@ export default function App() {
               &times;
             </button>
 
-            {activeTab === "directives" && selectedDirective && (
+            {activeTab === "directives" && directiveFormMode && selectedDirective ? (
+              <DirectiveForm
+                directive={selectedDirective}
+                onSave={handleSaveDirective}
+                onCancel={handleCancelDirectiveForm}
+                loading={loading}
+                error={error}
+              />
+            ) : activeTab === "directives" && selectedDirective ? (
               <DirectiveDetail
                 directive={selectedDirective}
                 onStatusChange={handleDirectiveStatusChange}
                 onEdit={handleEditDirective}
                 onDelete={handleDeleteDirective}
               />
-            )}
+            ) : null}
 
             {activeTab === "entries" && entryFormMode ? (
               <EntryForm
@@ -295,12 +348,12 @@ export default function App() {
       </div>
 
       {/* ── Loading indicator ── */}
-      {loading && !entryFormMode && (directives.length === 0 || entries.length === 0) && (
+      {loading && !directiveFormMode && !entryFormMode && (directives.length === 0 || entries.length === 0) && (
         <div className={styles.loadingBar} />
       )}
 
       {/* ── Error toast ── */}
-      {error && !entryFormMode && (
+      {error && !directiveFormMode && !entryFormMode && (
         <div className={styles.errorToast} onClick={() => setError(null)}>
           {error}
         </div>
@@ -309,7 +362,7 @@ export default function App() {
       {/* ── Modals ── */}
       {showDeleteModal && (
         <ConfirmModal
-          title="Delete entry"
+          title={`Delete ${showDeleteModal.type}`}
           message={`"${showDeleteModal.title}" will be permanently removed. This cannot be undone.`}
           onConfirm={confirmDelete}
           onCancel={() => setShowDeleteModal(null)}
