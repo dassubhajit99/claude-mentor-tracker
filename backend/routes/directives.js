@@ -10,7 +10,9 @@ router.get("/", async (req, res) => {
     if (req.query.category) filter.category = req.query.category;
     if (req.query.priority) filter.priority = req.query.priority;
     if (req.query.status) filter.status = req.query.status;
-    const directives = await MentorDirective.find(filter).sort({ createdAt: -1 });
+    const directives = await MentorDirective.find(filter).sort({
+      createdAt: -1,
+    });
     res.json(directives);
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -21,7 +23,8 @@ router.get("/", async (req, res) => {
 router.get("/:id", async (req, res) => {
   try {
     const directive = await MentorDirective.findById(req.params.id);
-    if (!directive) return res.status(404).json({ error: "Directive not found" });
+    if (!directive)
+      return res.status(404).json({ error: "Directive not found" });
     res.json(directive);
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -39,11 +42,12 @@ router.post("/", requireApiKey, async (req, res) => {
   }
 });
 
-// PUT /api/directives/:id — update (requires API key), pushes old version
-router.put("/:id", requireApiKey, async (req, res) => {
+// PUT /api/directives/:id — update, pushes old version
+router.put("/:id", async (req, res) => {
   try {
     const directive = await MentorDirective.findById(req.params.id);
-    if (!directive) return res.status(404).json({ error: "Directive not found" });
+    if (!directive)
+      return res.status(404).json({ error: "Directive not found" });
 
     // Push current state into versions array
     directive.versions.push({
@@ -76,20 +80,22 @@ router.patch("/:id/status", async (req, res) => {
     const directive = await MentorDirective.findByIdAndUpdate(
       req.params.id,
       { status },
-      { new: true, runValidators: true }
+      { new: true, runValidators: true },
     );
-    if (!directive) return res.status(404).json({ error: "Directive not found" });
+    if (!directive)
+      return res.status(404).json({ error: "Directive not found" });
     res.json(directive);
   } catch (err) {
     res.status(400).json({ error: err.message });
   }
 });
 
-// DELETE /api/directives/:id — delete (requires API key)
-router.delete("/:id", requireApiKey, async (req, res) => {
+// DELETE /api/directives/:id — delete
+router.delete("/:id", async (req, res) => {
   try {
     const directive = await MentorDirective.findByIdAndDelete(req.params.id);
-    if (!directive) return res.status(404).json({ error: "Directive not found" });
+    if (!directive)
+      return res.status(404).json({ error: "Directive not found" });
     res.json({ message: "Deleted" });
   } catch (err) {
     res.status(500).json({ error: err.message });
