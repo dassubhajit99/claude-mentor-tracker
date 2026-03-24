@@ -1,20 +1,38 @@
 import axios from "axios";
 
-const BASE = `${import.meta.env.VITE_API_URL || ""}/api/sessions`;
+const API = normalizeApiBase(import.meta.env.VITE_API_URL);
 
-export const fetchSessions = (level) => {
-  const params = level && level !== "all" ? { level } : {};
-  return axios.get(BASE, { params }).then((r) => r.data);
-};
+function normalizeApiBase(value) {
+  const trimmed = (value || "").trim().replace(/\/+$/, "");
+  return trimmed.endsWith("/api") ? trimmed.slice(0, -4) : trimmed;
+}
 
-export const createSession = (data) =>
-  axios.post(BASE, data).then((r) => r.data);
+function apiUrl(path) {
+  return `${API}/api${path}`;
+}
 
-export const getSession = (id) =>
-  axios.get(`${BASE}/${id}`).then((r) => r.data);
+// ── Directives ──
+export const fetchDirectives = (params = {}) =>
+  axios.get(apiUrl("/directives"), { params }).then((r) => r.data);
 
-export const updateSession = (id, data) =>
-  axios.put(`${BASE}/${id}`, data).then((r) => r.data);
+export const getDirective = (id) =>
+  axios.get(apiUrl(`/directives/${id}`)).then((r) => r.data);
 
-export const deleteSession = (id) =>
-  axios.delete(`${BASE}/${id}`).then((r) => r.data);
+export const patchDirectiveStatus = (id, status) =>
+  axios.patch(apiUrl(`/directives/${id}/status`), { status }).then((r) => r.data);
+
+// ── Learning Entries ──
+export const fetchEntries = (params = {}) =>
+  axios.get(apiUrl("/entries"), { params }).then((r) => r.data);
+
+export const getEntry = (id) =>
+  axios.get(apiUrl(`/entries/${id}`)).then((r) => r.data);
+
+export const createEntry = (data) =>
+  axios.post(apiUrl("/entries"), data).then((r) => r.data);
+
+export const updateEntry = (id, data) =>
+  axios.put(apiUrl(`/entries/${id}`), data).then((r) => r.data);
+
+export const deleteEntry = (id) =>
+  axios.delete(apiUrl(`/entries/${id}`)).then((r) => r.data);

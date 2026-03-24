@@ -1,0 +1,80 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+/* ── Filter bar ── */
+.filterBar {
+  padding: 0.65rem 0.85rem;
+  border-bottom: 1px solid var(--border-subtle);
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  flex-shrink: 0;
+}
+
+.filterGroup {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+}
+
+.filterLabel {
+  font-family: var(--font-mono);
+  font-size: 0.55rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-muted);
+  min-width: 52px;
+}
+
+.pills {
+  display: flex;
+  gap: 0.2rem;
+  flex-wrap: wrap;
+}
+
+.pill {
+  font-family: var(--font-mono);
+  font-size: 0.58rem;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  border: 1px solid var(--border-subtle);
+  background: transparent;
+  color: var(--text-muted);
+  padding: 0.18rem 0.4rem;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  white-space: nowrap;
+}
+
+.pill:hover {
+  color: var(--text-secondary);
+  border-color: var(--border-default);
+  background: var(--bg-hover);
+}
+
+.pill.active {
+  color: var(--text-primary);
+  background: var(--bg-elevated);
+  border-color: var(--border-focus);
+}
+
+/* ── List ── */
+.list {
+  flex: 1;
+  overflow-y: auto;
+  padding: 0.5rem 0.85rem;
+}
+
+.empty {
+  padding: 2rem 1rem;
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  text-align: center;
+}

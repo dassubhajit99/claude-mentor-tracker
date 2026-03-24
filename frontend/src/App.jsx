@@ -1,155 +1,318 @@
-import { useState, useEffect } from "react";
-import SessionList from "./components/SessionList";
-import SessionDetail from "./components/SessionDetail";
-import SessionForm from "./components/SessionForm";
+import { useState, useEffect, useCallback } from "react";
+import DirectiveList from "./components/DirectiveList";
+import DirectiveDetail from "./components/DirectiveDetail";
+import EntryList from "./components/EntryList";
+import EntryDetail from "./components/EntryDetail";
+import EntryForm from "./components/EntryForm";
 import ConfirmModal from "./components/ConfirmModal";
-import { fetchSessions, createSession, updateSession, deleteSession } from "./api";
+import {
+  fetchDirectives,
+  patchDirectiveStatus,
+  fetchEntries,
+  createEntry,
+  updateEntry,
+  deleteEntry,
+} from "./api";
 import styles from "./styles/App.module.css";
 
+const TABS = [
+  { key: "directives", label: "> mentor_directives" },
+  { key: "entries", label: "> learning_log" },
+];
+
+function getErrorMessage(error, fallback) {
+  return error?.response?.data?.error || error?.message || fallback;
+}
+
 export default function App() {
-  const [sessions, setSessions] = useState([]);
-  const [selectedSession, setSelectedSession] = useState(null);
-  const [formMode, setFormMode] = useState(null); // "create" | "edit" | null
-  const [activeFilter, setActiveFilter] = useState("all");
+  const [activeTab, setActiveTab] = useState("directives");
+
+  // ── Directives state ──
+  const [directives, setDirectives] = useState([]);
+  const [selectedDirective, setSelectedDirective] = useState(null);
+  const [directiveFilters, setDirectiveFilters] = useState({});
+
+  // ── Entries state ──
+  const [entries, setEntries] = useState([]);
+  const [selectedEntry, setSelectedEntry] = useState(null);
+  const [entryFormMode, setEntryFormMode] = useState(null); // "create" | "edit" | null
+  const [entryTrackFilter, setEntryTrackFilter] = useState(null);
+  const [entrySearch, setEntrySearch] = useState("");
+
+  // ── Shared state ──
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(null); // { id, title }
+
+  // ── Load data ──
+  const loadDirectives = useCallback(async () => {
+    try {
+      setLoading(true);
+      const params = {};
+      if (directiveFilters.category) params.category = directiveFilters.category;
+      if (directiveFilters.priority) params.priority = directiveFilters.priority;
+      if (directiveFilters.status) params.status = directiveFilters.status;
+      const data = await fetchDirectives(params);
+      setDirectives(data);
+      setError(null);
+    } catch (e) {
+      setError(getErrorMessage(e, "Failed to load directives."));
+    } finally {
+      setLoading(false);
+    }
+  }, [directiveFilters]);
+
+  const loadEntries = useCallback(async () => {
+    try {
+      setLoading(true);
+      const params = {};
+      if (entryTrackFilter) params.track = entryTrackFilter;
+      if (entrySearch.trim()) params.search = entrySearch.trim();
+      const data = await fetchEntries(params);
+      setEntries(data);
+      setError(null);
+    } catch (e) {
+      setError(getErrorMessage(e, "Failed to load entries."));
+    } finally {
+      setLoading(false);
+    }
+  }, [entryTrackFilter, entrySearch]);
 
   useEffect(() => {
-    loadSessions();
-  }, []);
+    loadDirectives();
+  }, [loadDirectives]);
 
-  async function loadSessions() {
+  useEffect(() => {
+    loadEntries();
+  }, [loadEntries]);
+
+  // ── Directive handlers ──
+  function handleSelectDirective(d) {
+    setSelectedDirective(d);
+    setError(null);
+  }
+
+  function handleDirectiveFilterChange(key, value) {
+    setDirectiveFilters((prev) => ({ ...prev, [key]: value }));
+    setSelectedDirective(null);
+  }
+
+  async function handleDirectiveStatusChange(id, status) {
     try {
-      setLoading(true);
-      const data = await fetchSessions();
-      setSessions(data);
+      const updated = await patchDirectiveStatus(id, status);
+      setDirectives((prev) => prev.map((d) => (d._id === id ? updated : d)));
+      if (selectedDirective?._id === id) setSelectedDirective(updated);
     } catch (e) {
-      setError("Failed to load sessions.");
-    } finally {
-      setLoading(false);
+      setError(getErrorMessage(e, "Failed to update status."));
     }
   }
 
-  const currentLevel = sessions.length > 0 ? sessions[0].roadmapPhase : null;
+  function handleEditDirective() {
+    setError("Directive editing is restricted to the protected backend API flow.");
+  }
 
-  function handleSelect(session) {
-    setSelectedSession(session);
-    setFormMode(null);
+  function handleDeleteDirective() {
+    setError("Directive deletion is restricted to the protected backend API flow.");
+  }
+
+  // ── Entry handlers ──
+  function handleSelectEntry(e) {
+    setSelectedEntry(e);
+    setEntryFormMode(null);
     setError(null);
   }
 
-  function handleNewSession() {
-    setSelectedSession(null);
-    setFormMode("create");
+  function handleNewEntry() {
+    setSelectedEntry(null);
+    setEntryFormMode("create");
     setError(null);
   }
 
-  function handleEdit() {
-    setFormMode("edit");
+  function handleEditEntry() {
+    setEntryFormMode("edit");
     setError(null);
   }
 
-  function handleDelete() {
-    if (!selectedSession) return;
-    setShowDeleteModal(true);
+  function handleDeleteEntry() {
+    if (!selectedEntry) return;
+    setShowDeleteModal({
+      id: selectedEntry._id,
+      title: selectedEntry.title,
+    });
   }
 
-  async function confirmDelete() {
-    setShowDeleteModal(false);
-    try {
-      setLoading(true);
-      await deleteSession(selectedSession._id);
-      setSessions((prev) => prev.filter((s) => s._id !== selectedSession._id));
-      setSelectedSession(null);
-      setFormMode(null);
-    } catch (e) {
-      setError("Failed to delete session.");
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  async function handleSave(payload) {
+  async function handleSaveEntry(payload) {
     try {
       setLoading(true);
       setError(null);
-      if (formMode === "create") {
-        const created = await createSession(payload);
-        setSessions((prev) => [created, ...prev]);
-        setSelectedSession(created);
+      if (entryFormMode === "create") {
+        const created = await createEntry(payload);
+        setEntries((prev) => [created, ...prev]);
+        setSelectedEntry(created);
       } else {
-        const updated = await updateSession(selectedSession._id, payload);
-        setSessions((prev) =>
-          prev.map((s) => (s._id === updated._id ? updated : s))
-        );
-        setSelectedSession(updated);
+        const updated = await updateEntry(selectedEntry._id, payload);
+        setEntries((prev) => prev.map((e) => (e._id === updated._id ? updated : e)));
+        setSelectedEntry(updated);
       }
-      setFormMode(null);
+      setEntryFormMode(null);
     } catch (e) {
-      setError(e.response?.data?.error || "Failed to save session.");
+      setError(getErrorMessage(e, "Failed to save entry."));
     } finally {
       setLoading(false);
     }
   }
 
-  function handleCancel() {
-    setFormMode(null);
+  function handleCancelEntryForm() {
+    setEntryFormMode(null);
     setError(null);
   }
 
+  // Debounced search
+  const [searchTimeout, setSearchTimeout] = useState(null);
+  function handleEntrySearch(value) {
+    if (searchTimeout) clearTimeout(searchTimeout);
+    const t = setTimeout(() => setEntrySearch(value), 300);
+    setSearchTimeout(t);
+  }
+
+  // ── Delete confirm ──
+  async function confirmDelete() {
+    if (!showDeleteModal) return;
+    const { id } = showDeleteModal;
+    setShowDeleteModal(null);
+    try {
+      setLoading(true);
+      await deleteEntry(id);
+      setEntries((prev) => prev.filter((e) => e._id !== id));
+      if (selectedEntry?._id === id) {
+        setSelectedEntry(null);
+        setEntryFormMode(null);
+      }
+    } catch (e) {
+      setError(getErrorMessage(e, "Failed to delete entry."));
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  // ── Close detail panel ──
+  function handleCloseDetail() {
+    setSelectedDirective(null);
+    setSelectedEntry(null);
+    setEntryFormMode(null);
+  }
+
+  // Determine if detail panel is open
+  const hasDetailOpen =
+    activeTab === "directives"
+      ? !!selectedDirective
+      : !!(selectedEntry || entryFormMode);
+
   return (
-    <div className={styles.appGrid}>
+    <div className={styles.app}>
+      {/* ── Header ── */}
       <header className={styles.header}>
-        <span className={styles.appName}>Claude Mentor Tracker</span>
-        {currentLevel && (
-          <span className={styles.currentLevel}>{currentLevel}</span>
-        )}
+        <span className={styles.appName}>&gt; oxide_tracker</span>
       </header>
 
-      <aside className={styles.leftPanel}>
-        <SessionList
-          sessions={sessions}
-          selectedId={selectedSession?._id}
-          activeFilter={activeFilter}
-          onFilterChange={setActiveFilter}
-          onSelect={handleSelect}
-          onNewSession={handleNewSession}
-        />
-      </aside>
+      {/* ── Tab bar ── */}
+      <nav className={styles.tabBar}>
+        {TABS.map((tab) => (
+          <button
+            key={tab.key}
+            className={`${styles.tab} ${activeTab === tab.key ? styles.tabActive : ""}`}
+            onClick={() => {
+              setActiveTab(tab.key);
+              setSelectedDirective(null);
+              setSelectedEntry(null);
+              setEntryFormMode(null);
+              setError(null);
+            }}
+          >
+            {tab.label}
+          </button>
+        ))}
+      </nav>
 
-      <main className={styles.rightPanel}>
-        {loading && !formMode && sessions.length === 0 && (
-          <p className={styles.empty}>Loading...</p>
+      {/* ── Content area ── */}
+      <div className={`${styles.content} ${hasDetailOpen ? styles.splitOpen : ""}`}>
+        {/* List panel */}
+        <div className={styles.listPanel}>
+          {activeTab === "directives" ? (
+            <DirectiveList
+              directives={directives}
+              selectedId={selectedDirective?._id}
+              filters={directiveFilters}
+              onFilterChange={handleDirectiveFilterChange}
+              onSelect={handleSelectDirective}
+            />
+          ) : (
+            <EntryList
+              entries={entries}
+              selectedId={selectedEntry?._id}
+              activeTrack={entryTrackFilter}
+              onTrackChange={setEntryTrackFilter}
+              onSearch={handleEntrySearch}
+              onSelect={handleSelectEntry}
+              onNewEntry={handleNewEntry}
+            />
+          )}
+        </div>
+
+        {/* Detail panel */}
+        {hasDetailOpen && (
+          <div className={styles.detailPanel}>
+            <button className={styles.closeDetail} onClick={handleCloseDetail}>
+              &times;
+            </button>
+
+            {activeTab === "directives" && selectedDirective && (
+              <DirectiveDetail
+                directive={selectedDirective}
+                onStatusChange={handleDirectiveStatusChange}
+                onEdit={handleEditDirective}
+                onDelete={handleDeleteDirective}
+              />
+            )}
+
+            {activeTab === "entries" && entryFormMode ? (
+              <EntryForm
+                entry={entryFormMode === "edit" ? selectedEntry : null}
+                onSave={handleSaveEntry}
+                onCancel={handleCancelEntryForm}
+                loading={loading}
+                error={error}
+              />
+            ) : activeTab === "entries" && selectedEntry ? (
+              <EntryDetail
+                entry={selectedEntry}
+                onEdit={handleEditEntry}
+                onDelete={handleDeleteEntry}
+              />
+            ) : null}
+          </div>
         )}
+      </div>
 
-        {formMode ? (
-          <SessionForm
-            session={formMode === "edit" ? selectedSession : null}
-            onSave={handleSave}
-            onCancel={handleCancel}
-            loading={loading}
-            error={error}
-          />
-        ) : selectedSession ? (
-          <SessionDetail
-            session={selectedSession}
-            onEdit={handleEdit}
-            onDelete={handleDelete}
-          />
-        ) : (
-          <p className={styles.empty}>
-            Select a session or create a new one.
-          </p>
-        )}
-      </main>
+      {/* ── Loading indicator ── */}
+      {loading && !entryFormMode && (directives.length === 0 || entries.length === 0) && (
+        <div className={styles.loadingBar} />
+      )}
 
+      {/* ── Error toast ── */}
+      {error && !entryFormMode && (
+        <div className={styles.errorToast} onClick={() => setError(null)}>
+          {error}
+        </div>
+      )}
+
+      {/* ── Modals ── */}
       {showDeleteModal && (
         <ConfirmModal
-          title="Delete session"
-          message={`"${selectedSession?.title}" will be permanently removed. This cannot be undone.`}
+          title="Delete entry"
+          message={`"${showDeleteModal.title}" will be permanently removed. This cannot be undone.`}
           onConfirm={confirmDelete}
-          onCancel={() => setShowDeleteModal(false)}
+          onCancel={() => setShowDeleteModal(null)}
         />
       )}
     </div>

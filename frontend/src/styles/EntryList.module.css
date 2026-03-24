@@ -1,0 +1,111 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.toolbar {
+  padding: 0.65rem 0.85rem;
+  border-bottom: 1px solid var(--border-subtle);
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  flex-shrink: 0;
+}
+
+.searchRow {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.searchInput {
+  flex: 1;
+  padding: 0.45rem 0.7rem;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  font-family: var(--font-mono);
+  font-size: 0.76rem;
+  color: var(--text-primary);
+  background: var(--bg-input);
+  transition: border-color var(--transition-fast);
+}
+
+.searchInput::placeholder {
+  color: var(--text-muted);
+  opacity: 0.6;
+}
+
+.searchInput:focus {
+  outline: none;
+  border-color: var(--accent-l2);
+  box-shadow: 0 0 0 2px rgba(0, 180, 255, 0.08);
+}
+
+.newBtn {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  background: var(--bg-elevated);
+  color: var(--accent-l1);
+  border: 1px dashed var(--accent-l1);
+  border-radius: var(--radius-md);
+  padding: 0.4rem 0.75rem;
+  cursor: pointer;
+  transition: all var(--transition-default);
+  opacity: 0.75;
+  white-space: nowrap;
+}
+
+.newBtn:hover {
+  opacity: 1;
+  background: var(--glow-l1);
+  border-style: solid;
+}
+
+.filters {
+  display: flex;
+  gap: 0.2rem;
+  flex-wrap: wrap;
+}
+
+.pill {
+  font-family: var(--font-mono);
+  font-size: 0.58rem;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  border: 1px solid var(--border-subtle);
+  background: transparent;
+  color: var(--text-muted);
+  padding: 0.18rem 0.4rem;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  white-space: nowrap;
+}
+
+.pill:hover {
+  color: var(--text-secondary);
+  border-color: var(--border-default);
+  background: var(--bg-hover);
+}
+
+.pill.active {
+  color: var(--text-primary);
+  background: var(--bg-elevated);
+  border-color: var(--border-focus);
+}
+
+.list {
+  flex: 1;
+  overflow-y: auto;
+  padding: 0.5rem 0.85rem;
+}
+
+.empty {
+  padding: 2rem 1rem;
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  text-align: center;
+}
