@@ -24,6 +24,8 @@ app.use(async (req, res, next) => {
 
 // Routes
 app.use("/api/sessions", require("./routes/sessions"));
+app.use("/api/directives", require("./routes/directives"));
+app.use("/api/entries", require("./routes/entries"));
 
 // Health check
 app.get("/", (req, res) => res.json({ status: "ok" }));
