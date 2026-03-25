@@ -6,8 +6,8 @@ export default defineConfig({
   server: {
     port: 5173,
     proxy: {
-      "/api": "http://localhost:5000",
-      // "/api": "https://claude-mentor-tracker.vercel.app",
+      // "/api": "http://localhost:5000",
+      "/api": "https://claude-mentor-tracker.vercel.app",
     },
   },
 });
