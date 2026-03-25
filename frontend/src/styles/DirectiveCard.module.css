@@ -134,9 +134,9 @@
 }
 
 .status_PENDING {
-  color: var(--text-muted);
-  background: var(--bg-elevated);
-  border: 1px solid var(--border-subtle);
+  color: #f3c56c;
+  background: rgba(255, 179, 51, 0.12);
+  border: 1px solid rgba(255, 179, 51, 0.22);
 }
 
 .status_IN_PROGRESS {
@@ -152,8 +152,8 @@
 }
 
 .status_SKIPPED {
-  color: var(--text-muted);
-  background: var(--bg-hover);
-  border: 1px solid var(--border-subtle);
+  color: #c7b4f8;
+  background: rgba(154, 126, 255, 0.12);
+  border: 1px solid rgba(154, 126, 255, 0.2);
   text-decoration: line-through;
 }

@@ -222,9 +222,9 @@
 }
 
 .active_PENDING {
-  color: var(--text-secondary);
-  background: var(--bg-elevated);
-  border-color: var(--border-focus);
+  color: #f3c56c;
+  background: rgba(255, 179, 51, 0.12);
+  border-color: rgba(255, 179, 51, 0.28);
 }
 
 .active_IN_PROGRESS {
@@ -240,9 +240,9 @@
 }
 
 .active_SKIPPED {
-  color: var(--text-muted);
-  background: var(--bg-hover);
-  border-color: var(--border-default);
+  color: #c7b4f8;
+  background: rgba(154, 126, 255, 0.12);
+  border-color: rgba(154, 126, 255, 0.22);
 }
 
 @media (max-width: 768px) {
